@@ -32,3 +32,6 @@ C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\ob
 C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\obj\Debug\net8.0\SuggestTaskService.pdb
 C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\obj\Debug\net8.0\SuggestTaskService.genruntimeconfig.cache
 C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\obj\Debug\net8.0\ref\SuggestTaskService.dll
+C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\bin\Debug\net8.0\FluentValidation.dll
+C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\bin\Debug\net8.0\FluentValidation.AspNetCore.dll
+C:\Users\mayac\Documents\מסמכים\home-assignment-nice\SuggestTaskService\bin\Debug\net8.0\FluentValidation.DependencyInjectionExtensions.dll
