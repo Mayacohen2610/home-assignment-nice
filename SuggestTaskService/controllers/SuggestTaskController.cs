@@ -22,13 +22,13 @@ namespace SuggestTaskService.Controllers
             // logging of the incoming JSON 
             Console.WriteLine($"[INFO] Incoming: userId={req?.userId}, sessionId={req?.sessionId}, utterance='{req?.utterance}', ts='{req?.timestamp}'");
             
-            //  Validate input 
-            var (ok, error) = ValidateRequest(req); 
-            if (!ok)
-            {
-                Console.WriteLine($"[WARN] Validation failed: {error}");
-                return BadRequest(new { error }); // Return 400 Bad Request with error message
-            }
+            // //  Validate input 
+            // var (ok, error) = ValidateRequest(req); 
+            // if (!ok)
+            // {
+            //     Console.WriteLine($"[WARN] Validation failed: {error}");
+            //     return BadRequest(new { error }); // Return 400 Bad Request with error message
+            // }
 
             // log message to confirm validation passed
             Console.WriteLine("[INFO] Validation passed");
@@ -69,46 +69,46 @@ namespace SuggestTaskService.Controllers
         };
 
         // function to validate the incoming JSON request
-        private static (bool ok, string? error) ValidateRequest(SuggestTaskRequest? req)
-        {
-            // Check for null request
-            if (req is null){
-                // log message for null request
-                Console.WriteLine("[WARN] Request body is null or invalid JSON");
-                return (false, "invalid JSON body");
-                }
+        // private static (bool ok, string? error) ValidateRequest(SuggestTaskRequest? req)
+        // {
+        //     // Check for null request
+        //     if (req is null){
+        //         // log message for null request
+        //         Console.WriteLine("[WARN] Request body is null or invalid JSON");
+        //         return (false, "invalid JSON body");
+        //         }
             
-            // Validate required string fields (non-empty)
-            if (string.IsNullOrWhiteSpace(req.utterance)){
-                Console.WriteLine("[WARN] Missing or empty 'utterance' field");
-                return (false, "utterance is required");
-            }
-            if (string.IsNullOrWhiteSpace(req.userId)) {
-                Console.WriteLine("[WARN] Missing or empty 'userId' field");
-                return (false, "userId is required");
-            }
-            if (string.IsNullOrWhiteSpace(req.sessionId)){
-                Console.WriteLine("[WARN] Missing or empty 'sessionId' field");
-                return (false, "sessionId is required");
-            }
+        //     // Validate required string fields (non-empty)
+        //     if (string.IsNullOrWhiteSpace(req.utterance)){
+        //         Console.WriteLine("[WARN] Missing or empty 'utterance' field");
+        //         return (false, "utterance is required");
+        //     }
+        //     if (string.IsNullOrWhiteSpace(req.userId)) {
+        //         Console.WriteLine("[WARN] Missing or empty 'userId' field");
+        //         return (false, "userId is required");
+        //     }
+        //     if (string.IsNullOrWhiteSpace(req.sessionId)){
+        //         Console.WriteLine("[WARN] Missing or empty 'sessionId' field");
+        //         return (false, "sessionId is required");
+        //     }
 
-            // Validate ISO-8601 timestamp (e.g., 2025-08-21T12:00:00Z)
-            if (string.IsNullOrWhiteSpace(req.timestamp)){
-                Console.WriteLine("[WARN] Missing or empty 'timestamp' field");
-                return (false, "timestamp is required");
-            }
+        //     // Validate ISO-8601 timestamp (e.g., 2025-08-21T12:00:00Z)
+        //     if (string.IsNullOrWhiteSpace(req.timestamp)){
+        //         Console.WriteLine("[WARN] Missing or empty 'timestamp' field");
+        //         return (false, "timestamp is required");
+        //     }
 
-            if (!DateTime.TryParse(req.timestamp,
-                                   CultureInfo.InvariantCulture,
-                                   DateTimeStyles.RoundtripKind,
-                                   out _))
-            {
-                Console.WriteLine("[WARN] 'timestamp' is not valid ISO-8601 format");
-                return (false, "timestamp must be ISO-8601 (e.g., 2025-08-21T12:00:00Z)");
-            }
+        //     if (!DateTime.TryParse(req.timestamp,
+        //                            CultureInfo.InvariantCulture,
+        //                            DateTimeStyles.RoundtripKind,
+        //                            out _))
+        //     {
+        //         Console.WriteLine("[WARN] 'timestamp' is not valid ISO-8601 format");
+        //         return (false, "timestamp must be ISO-8601 (e.g., 2025-08-21T12:00:00Z)");
+        //     }
 
-            return (true, null);
-        }
+        //     return (true, null);
+        // }
 
         // function to match the utterance to a task based on predefined patterns
         public static string MatchTask(string? utterance)

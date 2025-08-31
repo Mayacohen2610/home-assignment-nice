@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SuggestTaskService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc835604b2928f72a084a24ce4c396e6d44e14c4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d56af7fa28dd16acd71df3a45f353b24cb96fed2")]
 [assembly: System.Reflection.AssemblyProductAttribute("SuggestTaskService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SuggestTaskService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
