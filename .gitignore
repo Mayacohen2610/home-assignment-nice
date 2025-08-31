@@ -1,0 +1,28 @@
+# Build artifacts
+bin/
+obj/
+TestResults/
+publish/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Rider / JetBrains
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+
+# Coverage reports
+coverage/
