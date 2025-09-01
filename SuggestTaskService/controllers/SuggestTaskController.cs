@@ -40,8 +40,17 @@ namespace SuggestTaskService.Controllers
             var task = MatchTask(req.utterance!); 
             Console.WriteLine($"[INFO] Selected task='{task}' for userId={req.userId}");
 
+            // Determine failure probability from header (default 0.5)- for testing purposes
+            double failureProbability = 0.5;
+            if (Request.Headers.TryGetValue("X-Failure-Probability", out var probHeader) &&
+                double.TryParse(probHeader.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed) &&
+                parsed >= 0.0 && parsed <= 1.0)
+            {
+                failureProbability = parsed; // valid value from header
+            }
+
             // Simulate external call with retries
-            var success = TryExternalWithRetry(maxAttempts: 3); // stop on first success
+            var success = TryExternalWithRetry(maxAttempts: 3, failureProbability); // stop on first success
             if (!success)
             {
                 // After 3 consecutive failures, stop and return an error response 503 (Service Unavailable)
@@ -108,11 +117,11 @@ namespace SuggestTaskService.Controllers
         }
 
         // 3 attempts to call SimulatedExternalCall, returns true if any attempt succeeds and false if all fails
-        private static bool TryExternalWithRetry(int maxAttempts = 3)
+        private static bool TryExternalWithRetry(int maxAttempts = 3, double failureProbability = 0.50)
         {
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                if (SimulatedExternalCall()){
+                if (SimulatedExternalCall(failureProbability)){
                     // log success
                     Console.WriteLine($"[INFO] External call succeeded on attempt {attempt}");
                     return true; // success on this attempt

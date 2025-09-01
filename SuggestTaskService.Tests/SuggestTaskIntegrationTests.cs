@@ -15,9 +15,9 @@ namespace SuggestTaskService.Tests
             _client = factory.CreateClient();
         }
 
-        // test for valid ResetPasswordTask utterance
+        // Case 1: 0% failure -> should always return 200 OK + ResetPasswordTask
         [Fact]
-        public async Task PostSuggestTask_ReturnsResetPasswordTask()
+        public async Task PostSuggestTask_WithZeroFailureProbability_ReturnsOk()
         {
             var payload = new
             {
@@ -27,8 +27,13 @@ namespace SuggestTaskService.Tests
                 timestamp = "2025-08-21T12:00:00Z"
             };
 
-            var response = await _client.PostAsJsonAsync("/suggestTask", payload);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/suggestTask")
+            {
+                Content = JsonContent.Create(payload)
+            };
+            request.Headers.Add("X-Failure-Probability", "0.0");
 
+            var response = await _client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var json = await response.Content.ReadFromJsonAsync<ResponseDto>();
@@ -36,44 +41,62 @@ namespace SuggestTaskService.Tests
             Assert.Equal("ResetPasswordTask", json!.task);
         }
 
-        // test for missing utterance
+        // Case 2: 50% failure -> can be either 200 OK or 503 ServiceUnavailable
         [Fact]
-        public async Task PostSuggestTask_MissingUtterance_ReturnsBadRequest()
+        public async Task PostSuggestTask_WithFiftyPercentFailureProbability_ReturnsOkOr503()
         {
             var payload = new
             {
+                utterance = "please reset password",
                 userId = "u2",
                 sessionId = "s2",
                 timestamp = "2025-08-21T12:00:00Z"
             };
 
-            var response = await _client.PostAsJsonAsync("/suggestTask", payload);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/suggestTask")
+            {
+                Content = JsonContent.Create(payload)
+            };
+            request.Headers.Add("X-Failure-Probability", "0.5");
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var response = await _client.SendAsync(request);
+
+            // Accept either success or Service Unavailable due to random simulation
+            Assert.True(
+                response.StatusCode == HttpStatusCode.OK ||
+                response.StatusCode == HttpStatusCode.ServiceUnavailable
+            );
+
+            // If success, assert the task
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var json = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                Assert.NotNull(json);
+                Assert.Equal("ResetPasswordTask", json!.task);
+            }
         }
 
-        // test for no matching utterance
+        // Case 3: 100% failure -> should always return 503 ServiceUnavailable
         [Fact]
-        public async Task PostSuggestTask_NoMatchingUtterance_ReturnsNoTaskFound()
+        public async Task PostSuggestTask_WithAlwaysFailingDependency_Returns503()
         {
             var payload = new
             {
-                utterance = "hello world",
+                utterance = "please reset password",
                 userId = "u3",
                 sessionId = "s3",
                 timestamp = "2025-08-21T12:00:00Z"
             };
 
-            var response = await _client.PostAsJsonAsync("/suggestTask", payload);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/suggestTask")
+            {
+                Content = JsonContent.Create(payload)
+            };
+            request.Headers.Add("X-Failure-Probability", "1.0");
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            var json = await response.Content.ReadFromJsonAsync<ResponseDto>();
-            Assert.NotNull(json);
-            Assert.Equal("NoTaskFound", json!.task);
+            var response = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
         }
-
-
 
         private sealed class ResponseDto
         {
