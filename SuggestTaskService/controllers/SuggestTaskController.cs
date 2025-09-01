@@ -19,6 +19,10 @@ namespace SuggestTaskService.Controllers
         // Bind JSON body to SuggestTaskRequest
         public IActionResult Post([FromBody] SuggestTaskRequest req)   
         {
+            // explicit guard to satisfy the compiler and ensure non-null utterance
+            if (req?.utterance is null)
+                return BadRequest(new { errors = new { utterance = new[] { "Utterance must not be null" } } });
+
             // logging of the incoming JSON 
             Console.WriteLine($"[INFO] Incoming: userId={req?.userId}, sessionId={req?.sessionId}, utterance='{req?.utterance}', ts='{req?.timestamp}'");
 
@@ -27,7 +31,7 @@ namespace SuggestTaskService.Controllers
 
             // Match task based on utterance
             // req.utterance is non-null due to validation- but to satisfy the compiler:
-            if (req.utterance == null) 
+            if (req is null || req.utterance is null)
             {
                 // this should never happen due to validation
                 Console.WriteLine("[ERROR] utterance is null after validation- this should never happen");
