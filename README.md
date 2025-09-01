@@ -94,6 +94,7 @@ The API exposes a single endpoint that uses **regular expression (regex) matchin
 Regex patterns allow more flexible matching than a strict dictionary: for example, both *"reset my password"* and *"I forgot the password"* will be matched to `ResetPasswordTask`.  
 The matching is **case-insensitive** and ignores extra spaces or punctuation.  
 Additionally, for each request the server simulates a call to an **external dependency**:  
+- By default, the dependency has a 50% chance of failing on each attempt.  
 - If the dependency succeeds (within up to 3 attempts), the API responds normally.  
 - If all 3 attempts fail consecutively, the API returns **503 Service Unavailable** with a JSON error:
   ```json
@@ -153,7 +154,6 @@ curl -X POST "http://localhost:5000/suggestTask"   -H "Content-Type: application
   }'
 ```
 
-
 ## Tests
 
 This repository includes **unit tests** and **integration tests**.
@@ -165,7 +165,7 @@ dotnet test
 ```
 
 ### What the Tests Cover
-- **Unit tests (`MatchTaskTests.cs`)**
+- **Unit tests (`MatchTaskTests.cs`, `ExternalCallTests.cs`)**
   - Validate the regex-based matching logic.
   - Examples:
     - `"reset password"` → `ResetPasswordTask`
@@ -180,6 +180,10 @@ dotnet test
     - Valid request returns **200 OK** with the matched `task`.
     - Unmatched utterance returns **200 OK** with `task = "NoTaskFound"`.
     - Missing/invalid fields return **400 Bad Request** with validation errors.
+    - External dependency simulation:
+      - With 0% failure probability → always **200 OK**.
+      - With 50% failure probability → result may be **200 OK** or **503 Service Unavailable**.
+      - With 100% failure probability → always **503 Service Unavailable**.
 
 ### Running a Specific Test Project
 To run only the tests project:
