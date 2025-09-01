@@ -9,6 +9,7 @@ namespace SuggestTaskService.Tests
     {
         private readonly HttpClient _client;
 
+        // Constructor to set up the in-memory test server and HttpClient
         public SuggestTaskIntegrationTests(WebApplicationFactory<Program> factory)
         {
             // in-memory server + HttpClient
@@ -98,6 +99,7 @@ namespace SuggestTaskService.Tests
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
         }
 
+        // DTO for deserializing response JSON
         private sealed class ResponseDto
         {
             public string? task { get; set; }
