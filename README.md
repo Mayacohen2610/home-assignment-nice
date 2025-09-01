@@ -7,10 +7,11 @@ An **ASP.NET Core (.NET 8)** Web API implemented in **C#** that exposes a single
 The project demonstrates:  
 1. **Validate input** using FluentValidation in C#.  
 2. **Add logging** – console logs for requests and responses.  
-3. **Match the utterance** against predefined task patterns (via regex).  
-4. **Return a JSON response** with the suggested task, or `"NoTaskFound"` if no match is found.  
-5. **Unit and integration tests** to validate both the matching logic and the API behavior.  
-
+3. **Match the utterance** against predefined task patterns (via regex). 
+4. **Retry mechanism** – simulates an external dependency that may randomly fail (50%), with up to 3 retry attempts before returning an error.
+5. **Return a JSON response** with the suggested task, or `"NoTaskFound"` if no match is found.  
+6. **Unit and integration tests** to validate both the matching logic and the API behavior.  
+ 
 ---
 
 ## Installation, Setup & Dependencies  
@@ -59,6 +60,7 @@ The service will start and be available at `http://localhost:5000` (or a similar
 
 ## Project Structure
 
+
 ```
 home-assignment-nice/
 ├─ SuggestTaskService/                # Main Web API project
@@ -75,6 +77,7 @@ home-assignment-nice/
 ├─ SuggestTaskService.Tests/          # Test project
 │  ├─ MatchTaskTests.cs               # Unit tests for the matching logic
 │  ├─ SuggestTaskIntegrationTests.cs  # Integration tests for the API endpoint
+│  ├─ ExternalCallTests.cs            # Unit tests for the retry simulation (SimulatedExternalCall)
 │  └─ SuggestTaskService.Tests.csproj # Test project definition
 │
 ├─ .gitignore                         # Git ignore rules
@@ -90,6 +93,13 @@ home-assignment-nice/
 The API exposes a single endpoint that uses **regular expression (regex) matching** to identify tasks.  
 Regex patterns allow more flexible matching than a strict dictionary: for example, both *"reset my password"* and *"I forgot the password"* will be matched to `ResetPasswordTask`.  
 The matching is **case-insensitive** and ignores extra spaces or punctuation.  
+Additionally, for each request the server simulates a call to an **external dependency**:  
+- If the dependency succeeds (within up to 3 attempts), the API responds normally.  
+- If all 3 attempts fail consecutively, the API returns **503 Service Unavailable** with a JSON error:
+  ```json
+  {
+    "error": "External dependency failed after 3 consecutive attempts"
+  }
 
 **Endpoint**:  
 ```

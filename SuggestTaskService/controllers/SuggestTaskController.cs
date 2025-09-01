@@ -26,10 +26,27 @@ namespace SuggestTaskService.Controllers
             Console.WriteLine("[INFO] Validation passed");
 
             // Match task based on utterance
-            var task = MatchTask(req.utterance!); // req.utterance is non-null due to validation
+            // req.utterance is non-null due to validation- but to satisfy the compiler:
+            if (req.utterance == null) 
+            {
+                // this should never happen due to validation
+                Console.WriteLine("[ERROR] utterance is null after validation- this should never happen");
+                return BadRequest(new { error = "utterance is null after validation- this should never happen" });
+            }
+            var task = MatchTask(req.utterance!); 
             Console.WriteLine($"[INFO] Selected task='{task}' for userId={req.userId}");
 
+            // Simulate external call with retries
+            var success = TryExternalWithRetry(maxAttempts: 3); // stop on first success
+            if (!success)
+            {
+                // After 3 consecutive failures, stop and return an error response 503 (Service Unavailable)
+                Console.WriteLine($"[ERROR] External dependency failed after 3 consecutive attempts for userId={req.userId}");
+                return StatusCode(503, new { error = "External dependency failed after 3 consecutive attempts" });
+            }
+
             // Response with ISO-8601 timestamp
+            Console.WriteLine($"[INFO] External dependency succeeded. Returning OK responsefor userId={req.userId}");
             return Ok(new
             {
                 task,
@@ -72,5 +89,36 @@ namespace SuggestTaskService.Controllers
             }
             return "NoTaskFound";
         }
+
+        // Simulates an external call that may randomly fail (bonus) .
+        // Returns true on success, false on failure- defalt 50% failure rate
+        private static bool SimulatedExternalCall(double failureProbability = 0.50)
+        {
+            var rnd = Random.Shared;
+            bool ok = rnd.NextDouble() >= failureProbability;
+
+            // simulate some latency- for realism
+            System.Threading.Thread.Sleep(20);
+
+            return ok;
+        }
+
+        // 3 attempts to call SimulatedExternalCall, returns true if any attempt succeeds and false if all fails
+        private static bool TryExternalWithRetry(int maxAttempts = 3)
+        {
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                if (SimulatedExternalCall()){
+                    // log success
+                    Console.WriteLine($"[INFO] External call succeeded on attempt {attempt}");
+                    return true; // success on this attempt
+                }
+                // simulate some latency before retrying- for realism
+                System.Threading.Thread.Sleep(50);
+            }
+            return false; // failed maxAttempts times in a row
+        }
+
+
     }
 }
