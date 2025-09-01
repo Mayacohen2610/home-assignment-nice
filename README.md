@@ -1,71 +1,103 @@
 # NICE Home Assignment – SuggestTaskService
 
 ## Overview
-A minimal **ASP.NET Core (.NET 8)** Web API that exposes a single endpoint:
-- **POST** `/suggestTask` – receives a user utterance and returns a **suggested task** based on case‑insensitive keyword matching.
+An **ASP.NET Core (.NET 8)** Web API implemented in **C#** that exposes a single endpoint:  
+- **POST** `/suggestTask` – receives a user utterance and returns a **suggested task** based on **regular expression matching** (case-insensitive).  
 
-The project demonstrates:
-- API design and routing
-- Input validation with **FluentValidation**
-- **Console logging** for requests and responses
-- Simple **business logic** for utterance→task mapping
-- **Unit** and **Integration** tests (xUnit + WebApplicationFactory)
-
----
-
-## Tech Stack
-- **Runtime**: .NET 8
-- **Web**: ASP.NET Core Minimal Hosting (Controllers)
-- **Validation**: FluentValidation.AspNetCore
-- **Docs**: Swagger / OpenAPI (enabled in *Development*)
-- **Tests**: xUnit, Microsoft.AspNetCore.Mvc.Testing
-
-NuGet packages (main project):
-- `FluentValidation.AspNetCore` (validation)
-- `Swashbuckle.AspNetCore`, `Microsoft.AspNetCore.OpenApi` (Swagger)
-
-NuGet packages (test project):
-- `xunit`, `xunit.runner.visualstudio`
-- `Microsoft.AspNetCore.Mvc.Testing`
-- `System.Net.Http.Json`
-- `coverlet.collector` (coverage)
+The project demonstrates:  
+1. **Validate input** using FluentValidation in C#.  
+2. **Add logging** – console logs for requests and responses.  
+3. **Match the utterance** against predefined task patterns (via regex).  
+4. **Return a JSON response** with the suggested task, or `"NoTaskFound"` if no match is found.  
+5. **Unit and integration tests** to validate both the matching logic and the API behavior.  
 
 ---
 
-## Repository Layout (exact names)
+## Installation, Setup & Dependencies  
+
+### Prerequisites  
+- .NET 8 SDK installed  
+
+### Setup  
+1. Clone the repository:  
+   ```bash
+   git clone <repo-url>
+   cd home-assignment-nice
+   ```  
+
+2. Restore dependencies:  
+   ```bash
+   dotnet restore
+   ```  
+
+3. Build the project:  
+   ```bash
+   dotnet build
+   ```  
+
+4. Run the API:  
+   ```bash
+   dotnet run --project SuggestTaskService
+   ```  
+
+The service will start and be available at `http://localhost:5000` (or a similar port printed in the console).  
+
+### NuGet Packages  
+- These are .NET packages (not folders) restored by `dotnet restore`.
+
+**Main project**:  
+- `FluentValidation.AspNetCore` – input validation  
+- `Swashbuckle.AspNetCore`, `Microsoft.AspNetCore.OpenApi` – Swagger / OpenAPI documentation  
+
+**Test project**:  
+- `xunit`, `xunit.runner.visualstudio` – unit testing framework  
+- `Microsoft.AspNetCore.Mvc.Testing` – integration testing utilities  
+- `System.Net.Http.Json` – helpers for HTTP testing  
+- `coverlet.collector` – code coverage collection  
+
+---
+
+## Project Structure
+
 ```
 home-assignment-nice/
-├─ HomeAssignmentNice.sln
-├─ README.md
-├─ SuggestTaskService/                 # ASP.NET Core Web API
-│  ├─ Program.cs                      # App setup, controllers, Swagger
-│  ├─ SuggestTaskService.csproj
-│  ├─ appsettings.json
-│  ├─ appsettings.Development.json
-│  ├─ SuggestTaskService.http         # Local HTTP scratch file (template)
-│  ├─ controllers/
-│  │  └─ SuggestTaskController.cs     # Endpoint + matching logic + logs
-│  ├─ models/
-│  │  └─ SuggestTaskRequest.cs        # DTO for the incoming request
-│  └─ validators/
-│     └─ SuggestTaskRequestValidator.cs   # FluentValidation rules
+├─ SuggestTaskService/                # Main Web API project
+│  ├─ Properties/                     # Project metadata and launch settings
+│  ├─ controllers/                    # API controllers (SuggestTaskController.cs)
+│  ├─ models/                         # Data transfer objects (e.g., SuggestTaskRequest.cs)
+│  ├─ validators/                     # Input validation rules with FluentValidation
+│  ├─ Program.cs                      # Application entry point and configuration
+│  ├─ SuggestTaskService.csproj       # Project definition file
+│  ├─ SuggestTaskService.http         # Local HTTP test file for API requests
+│  ├─ appsettings.json                # Application configuration (base)
+│  └─ appsettings.Development.json    # Development-specific configuration
 │
-└─ SuggestTaskService.Tests/           # Test project
-   ├─ SuggestTaskService.Tests.csproj
-   ├─ MatchTaskTests.cs                # Unit tests for matching logic
-   └─ SuggestTaskIntegrationTests.cs   # In‑memory integration tests
+├─ SuggestTaskService.Tests/          # Test project
+│  ├─ MatchTaskTests.cs               # Unit tests for the matching logic
+│  ├─ SuggestTaskIntegrationTests.cs  # Integration tests for the API endpoint
+│  └─ SuggestTaskService.Tests.csproj # Test project definition
+│
+├─ .gitignore                         # Git ignore rules
+├─ HomeAssignmentNice.sln             # Solution file
+└─ README.md                          # Project documentation
 ```
-
-> Notes:
-> - The **matching logic** is implemented in `controllers/SuggestTaskController.cs` as a static regex table (extended synonyms & order‑agnostic patterns).  
-> - Validation is performed via **FluentValidation** and the `[ApiController]` automatic 400 on invalid `ModelState`.  
-> - Logging is done with `Console.WriteLine` (INFO/WARN style).
 
 ---
 
-## API Contract
 
-### Request (JSON)
+## Usage  
+
+The API exposes a single endpoint that uses **regular expression (regex) matching** to identify tasks.  
+Regex patterns allow more flexible matching than a strict dictionary: for example, both *"reset my password"* and *"I forgot the password"* will be matched to `ResetPasswordTask`.  
+The matching is **case-insensitive** and ignores extra spaces or punctuation.  
+
+**Endpoint**:  
+```
+POST /suggestTask
+Content-Type: application/json
+```
+
+**Request example**:  
 ```json
 {
   "utterance": "I need help resetting my password",
@@ -75,9 +107,7 @@ home-assignment-nice/
 }
 ```
 
-- `timestamp` must be **ISO‑8601**; validation is enforced by `SuggestTaskRequestValidator`.
-
-### Response (200 OK)
+**Successful response (200 OK)**:  
 ```json
 {
   "task": "ResetPasswordTask",
@@ -85,73 +115,64 @@ home-assignment-nice/
 }
 ```
 
-### Response (400 Bad Request)
-Returned automatically when a required field is missing or invalid (e.g., empty `utterance`, bad `timestamp`).
+**When no match is found**:  
+```json
+{
+  "task": "NoTaskFound",
+  "timestamp": "2025-08-21T12:00:01Z"
+}
+```
 
----
+**When input is invalid (400 Bad Request)**:  
+```json
+{
+  "errors": {
+    "utterance": ["Utterance must not be empty"],
+    "timestamp": ["Timestamp must be a valid ISO-8601 date string"]
+  }
+}
+```
 
-## Matching Rules (as required by the assignment)
-- **reset password** → `ResetPasswordTask`
-- **forgot password** → `ResetPasswordTask`
-- **check order** → `CheckOrderStatusTask`
-- **track order** → `CheckOrderStatusTask`
-- Otherwise → `"NoTaskFound"`
-
-**Implementation detail**: the controller uses **compiled, case‑insensitive regex patterns** to cover natural variations (e.g., “can’t remember password”, “password reset please”, extra spaces, punctuation).
-
----
-
-## Getting Started
-
-### Prerequisites
-- **.NET 8 SDK** installed
-
-### Build and Run
-From the repository root:
+**cURL example**:  
 ```bash
-dotnet restore
-dotnet build
-dotnet run --project SuggestTaskService
-```
-The console will print the listening URL (e.g., `http://localhost:52xx`).
-
-### Swagger (Dev only)
-When `ASPNETCORE_ENVIRONMENT=Development`, navigate to:
-```
-http://localhost:<PORT>/swagger
-```
-to explore and test the endpoint.
-
-### cURL example
-```bash
-curl -X POST "http://localhost:<PORT>/suggestTask"   -H "Content-Type: application/json"   -d '{
-    "utterance":"please reset password",
-    "userId":"u1",
-    "sessionId":"s1",
+curl -X POST "http://localhost:5000/suggestTask"   -H "Content-Type: application/json"   -d '{
+    "utterance":"reset password",
+    "userId":"12345",
+    "sessionId":"abcde-67890",
     "timestamp":"2025-08-21T12:00:00Z"
   }'
 ```
 
----
 
 ## Tests
-Run all tests from the repository root:
+
+This repository includes **unit tests** and **integration tests**.
+
+### How to Run All Tests
+From the repository root:
 ```bash
 dotnet test
 ```
-Includes:
-- **Unit** tests for `MatchTask` coverage (positive/negative cases).
-- **Integration** tests that boot the API in‑memory and verify:
-  - `POST /suggestTask` → 200 with a matched task
-  - `POST /suggestTask` with missing fields → **400 Bad Request**
-  - Unmatched utterances → `"NoTaskFound"`
 
----
+### What the Tests Cover
+- **Unit tests (`MatchTaskTests.cs`)**
+  - Validate the regex-based matching logic.
+  - Examples:
+    - `"reset password"` → `ResetPasswordTask`
+    - `"forgot the password"` → `ResetPasswordTask`
+    - `"check order status"` / `"track my order"` → `CheckOrderStatusTask`
+    - Non-matching utterances → `NoTaskFound`
 
-## Design Notes
-- **Simplicity over layering**: For the scope of this assignment, the matching logic lives in the controller. In production, move it into a dedicated **service** with DI and add a richer logging/observability stack.
-- **Validation**: Implemented with FluentValidation; integrates with the `[ApiController]` filter to surface **400** automatically.
+- **Integration tests (`SuggestTaskIntegrationTests.cs`)**
+  - Spin up the API in-memory and send HTTP **POST** `/suggestTask`.
+  - Assert on HTTP status codes and response payloads.
+  - Scenarios:
+    - Valid request returns **200 OK** with the matched `task`.
+    - Unmatched utterance returns **200 OK** with `task = "NoTaskFound"`.
+    - Missing/invalid fields return **400 Bad Request** with validation errors.
 
----
-
-
+### Running a Specific Test Project
+To run only the tests project:
+```bash
+dotnet test ./SuggestTaskService.Tests/SuggestTaskService.Tests.csproj
+```
